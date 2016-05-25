@@ -85,6 +85,8 @@ def get_parser(app_name):
                             app_name))
     parser.add_argument('--app_name', type=str,
                         help='Application name.', const=app_name, nargs="?")
+    parser.add_argument('--project_dir', type=str,
+                        help='Directory containing application manifest.')
     return parser
 
 
