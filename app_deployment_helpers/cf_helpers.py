@@ -28,11 +28,6 @@ import requests
 
 from app_deployment_helpers import cf_cli
 
-NO_PROXIES = {
-    'http': None,
-    'https': None
-}
-
 
 def upload_to_hdfs(base_url, org_name, local_file_path, title, category='other'):
     """
@@ -57,7 +52,7 @@ def upload_to_hdfs(base_url, org_name, local_file_path, title, category='other')
 
     response = requests.post(uploader_url, files=files,
                              headers={'Authorization': cf_cli.oauth_token()},
-                             data=data, proxies=NO_PROXIES)
+                             data=data)
     response_json = json.loads(response.text)
     return response_json["objectStoreId"] + "/" + response_json[
         "idInObjectStore"]
