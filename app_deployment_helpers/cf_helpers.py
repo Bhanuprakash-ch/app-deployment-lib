@@ -79,7 +79,7 @@ def get_parser(app_name):
                         help='Space name in which {} will be deployed'.format(
                             app_name))
     parser.add_argument('--app_name', type=str,
-                        help='Application name.', const=app_name, nargs="?")
+                        help='Application name.', default=app_name)
     parser.add_argument('--project_dir', type=str,
                         help='Directory containing application manifest.')
     return parser
