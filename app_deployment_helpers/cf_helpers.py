@@ -41,7 +41,7 @@ def get_base_url(api_url):
     """
     api_url_part = api_url.partition("api.")
     if api_url_part[1] != "":
-        return api_url_part[1]
+        return api_url_part[2]
     else:
         return api_url
 
