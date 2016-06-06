@@ -38,7 +38,9 @@ class CommandFailedError(Exception):
     pass
 
 
-class CfInfo(object):  # pylint: disable=too-few-public-methods
+class CfInfo(object):
+    # pylint: disable=too-few-public-methods
+    # pylint: disable=too-many-instance-attributes
     """Information needed to log into Cloud Foundry.
 
     Attributes:
@@ -475,7 +477,7 @@ def get_target():
 
         return CfInfo(target_map[api_endpoint_key], "", target_map["User"],
                       target_map["Org"], target_map["Space"])
-    except Exception:
+    except Exception: # pylint: disable=broad-except
         # In case of any error, simply initialize with empty strings (no target data)
         return CfInfo("", "", "", "", "")
 
