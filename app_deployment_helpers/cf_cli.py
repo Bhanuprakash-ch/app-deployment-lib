@@ -49,21 +49,28 @@ class CfInfo(object):  # pylint: disable=too-few-public-methods
         org (str): Organization in which everything should be deployed.
         space (str): Space in the organization.
         ssl_validation (bool): Should the SSL (actually TLS) connection to CF API be validated.
+        login_required (bool): Is login required (e.g. API URL or user has changed).
+        target_required (bool): I target change required (e.g. Org or Space has changed).
     """
 
     def __init__(self, api_url, password,  # pylint: disable=too-many-arguments
                  user='admin', org='seedorg', space='seedspace',
-                 ssl_validation=False):
+                 ssl_validation=False, login_required=True, target_required=False):
         self.api_url = api_url
         self.password = password
         self.user = user
         self.org = org
         self.space = space
         self.ssl_validation = ssl_validation
+        self.login_required = login_required
+        self.target_required = target_required
 
 
 def login(cf_info):
-    """Logs the CF CLI into a Cloud Foundry instance specified in the constructor.
+    """
+    Logs the CF CLI into a Cloud Foundry instance specified in the constructor.
+    Login happens only if login_required is set to True.
+    Target change happens only if target_required is set to True.
 
     Args:
         cf_info (CfInfo): Cloud Foundry instance access information.
@@ -71,9 +78,12 @@ def login(cf_info):
     Raises:
         CommandFailedError: When there are errors in any of the subcommands (api, auth, target)
     """
-    api(cf_info.api_url, cf_info.ssl_validation)
-    auth(cf_info.user, cf_info.password)
-    target(cf_info.org, cf_info.space)
+
+    if cf_info.login_required:
+        api(cf_info.api_url, cf_info.ssl_validation)
+        auth(cf_info.user, cf_info.password)
+    if cf_info.target_required:
+        target(cf_info.org, cf_info.space)
 
 
 def bind_service(app_name, instance_name):
@@ -436,6 +446,38 @@ def target(org, space):
         CommandFailedError: When the command fails (returns non-zero code).
     """
     run_command([CF, 'target', '-o', org, '-s', space])
+
+
+def get_target():
+    """Get target information (api endpoint, user, org, space).
+
+    Raises:
+        CommandFailedError: When the command fails (returns non-zero code).
+
+    Returns:
+        CfInfo: Object filled with parsed data from "cf target" command.
+    """
+    api_endpoint_key = "API endpoint"
+    try:
+        output = get_command_output([CF, 'target'])
+        target_map = {}
+        for line in output.splitlines():
+            line = line.strip()
+            if line != "":
+                split_line = line.partition(':')
+                if split_line[1] != "":
+                    key = split_line[0].strip()
+                    value = split_line[2].strip()
+                    target_map[key] = value
+
+        # clean up endpoint address from API version info
+        target_map[api_endpoint_key] = target_map[api_endpoint_key].partition(" ")[0]
+
+        return CfInfo(target_map[api_endpoint_key], "", target_map["User"],
+                      target_map["Org"], target_map["Space"])
+    except Exception:
+        # In case of any error, simply initialize with empty strings (no target data)
+        return CfInfo("", "", "", "", "")
 
 
 def get_command_output(command):
