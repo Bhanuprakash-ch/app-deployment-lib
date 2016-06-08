@@ -29,23 +29,6 @@ import requests
 from app_deployment_helpers import cf_cli
 
 
-def get_base_url(api_url):
-    """
-    Retrieves the base TAP domain from CF API URL. For example,
-    returns "example.com" from "http://api.example.com".
-
-    Attributes:
-        api_url (str): CF API URL, e.g. http://api.example.com
-
-    Returns base TAP domain from CF API URL.
-    """
-    api_url_part = api_url.partition("api.")
-    if api_url_part[1] != "":
-        return api_url_part[2]
-    else:
-        return api_url
-
-
 def upload_to_hdfs(api_url, org_name, local_file_path, title, category='other'):
     """
     Uploads file to HDFS using running uploader application
@@ -60,7 +43,7 @@ def upload_to_hdfs(api_url, org_name, local_file_path, title, category='other'):
 
     org_guid = cf_cli.get_org_guid(org_name).decode("utf-8")
     uploader_url = "http://hdfs-uploader.{}/rest/upload/{}" \
-        .format(get_base_url(api_url), org_guid)
+        .format(_get_base_url(api_url), org_guid)
 
     data = _get_upload_request_body(org_guid, category, title)
     files = {
@@ -114,20 +97,6 @@ def parse_args(app_name):
     return parser.parse_args()
 
 
-def raw_input_default(message, default_value):
-    """
-    Reads text from stdin with handling default values. If default value is
-    present, then is displayed as part of the input message. If uses presses
-    ENTER key, this value is returned instead of empty string.
-    """
-
-    if default_value != "":
-        message += " [" + default_value + "]"
-    message += ": "
-    value = raw_input(message)
-    return value if value != "" else default_value
-
-
 def get_info(args):
     """
     Gets Cloud Foundry target and login information object based on user input
@@ -139,39 +108,17 @@ def get_info(args):
 
     """
 
-    # Get the default values from "cf target" command
-    current_cf_info = cf_cli.get_target()
-    login_required = False
-    target_required = False
+    current_target = cf_cli.get_current_cli_target()
+    arg_info = cf_cli.CfInfo(args.api_url, args.password, args.user, args.org,
+                             args.space)
+    arg_provided_target = arg_info.get_target_dict(include_password=True)
+    new_target = _extract_new_target(current_target, arg_provided_target)
+    login_required = _is_login_required(new_target, current_target)
+    target_required = _is_target_required(login_required,
+                                          new_target, current_target)
 
-    if not args.api_url:
-        args.api_url = raw_input_default('CF API URL', current_cf_info.api_url)
-    if args.api_url != current_cf_info.api_url:
-        login_required = True
-
-    if not args.user:
-        args.user = raw_input_default('Username', current_cf_info.user)
-    if args.user != current_cf_info.user:
-        login_required = True
-
-    if not args.password:
-        args.password = getpass.unix_getpass()
-    if args.password != "":
-        login_required = True
-
-    if not args.org:
-        args.org = raw_input_default('Organization', current_cf_info.org)
-    if not args.space:
-        args.space = raw_input_default('Space', current_cf_info.space)
-    if args.org != current_cf_info.org or args.space != current_cf_info.space:
-        target_required = True
-
-    if login_required:
-        target_required = True
-
-    return cf_cli.CfInfo(args.api_url, args.password, args.user,
-                         args.org, args.space, login_required=login_required,
-                         target_required=target_required)
+    return cf_cli.CfInfo.from_target_dict(new_target, login_required,
+                                          target_required)
 
 
 def prepare_package(work_dir=os.getcwd()):
@@ -213,3 +160,51 @@ def _get_upload_request_body(org_guid, file_category, file_title, public=False):
         'publicRequest': public
     }
     return data
+
+
+def _get_base_url(api_url):
+    base_url = api_url.partition('.')[2]
+    if not base_url:
+        raise ValueError('API URL format is invalid')
+    return base_url
+
+
+def _extract_new_target(current_target, arg_provided_target):
+    new_target = cf_cli.CfInfo.get_empty().get_target_dict()
+
+    for target_param in new_target:
+        current = current_target[target_param]
+        arg_provided = arg_provided_target[target_param]
+        new_target[target_param] = arg_provided if arg_provided else \
+            _raw_input_default(target_param, current)
+
+    if not arg_provided_target[cf_cli.CfInfo.PASSWORD_KEY]:
+        new_target[cf_cli.CfInfo.PASSWORD_KEY] = getpass.unix_getpass()
+    return new_target
+
+
+def _raw_input_default(message, default_value):
+    if default_value:
+        message = str.format('{} [{}]', message, default_value)
+    message = str.format('{}: ', message)
+    input_value = raw_input(message)
+    return input_value if input_value else default_value
+
+
+def _is_login_required(new_target, current_target):
+    if new_target[cf_cli.CfInfo.PASSWORD_KEY]:
+        return True
+    for key in cf_cli.CfInfo.get_login_keys():
+        if new_target[key] != current_target[key]:
+            return True
+    return False
+
+
+def _is_target_required(login_required, new_target, current_target):
+    if login_required:
+        return True
+    for key in cf_cli.CfInfo.get_org_space_keys():
+        if new_target[key] != current_target[key]:
+            return True
+    return False
+

@@ -55,6 +55,12 @@ class CfInfo(object):
         target_required (bool): I target change required (e.g. Org or Space has changed).
     """
 
+    CF_API_KEY = 'API endpoint'
+    USER_KEY = 'User'
+    PASSWORD_KEY = 'Password'
+    ORG_KEY = 'Org'
+    SPACE_KEY = 'Space'
+
     def __init__(self, api_url, password,  # pylint: disable=too-many-arguments
                  user='admin', org='seedorg', space='seedspace',
                  ssl_validation=False, login_required=True, target_required=False):
@@ -66,6 +72,73 @@ class CfInfo(object):
         self.ssl_validation = ssl_validation
         self.login_required = login_required
         self.target_required = target_required
+
+    @staticmethod
+    def from_target_dict(cf_target, login_required=True, target_required=False):
+        """Get CfInfo from dictionary containing api url, user, org, space etc.
+        Args:
+            cf_target (dict): Dictionary containing target information
+            login_required (bool): is login required when using returned CfInfo
+            target_required (bool) is re-setting target org and space required
+
+        Returns:
+            CfInfo: object containing target information
+        """
+        return CfInfo(cf_target[CfInfo.CF_API_KEY],
+                      cf_target[CfInfo.PASSWORD_KEY],
+                      cf_target[CfInfo.USER_KEY], cf_target[CfInfo.ORG_KEY],
+                      cf_target[CfInfo.SPACE_KEY], False, login_required,
+                      target_required)
+
+    @staticmethod
+    def get_empty():
+        """ Get empty CfInfo object
+
+        Returns:
+            CfInfo: object with fields of target information set to empty string
+        """
+        return CfInfo('', '', '', '', '')
+
+    @staticmethod
+    def get_login_keys(include_password=False):
+        """ Get login keys
+        Args:
+            include_password (bool): Should be password included in keys list
+
+        Returns:
+            list: Keys for target dictionary used for login
+        """
+        login_params = [CfInfo.CF_API_KEY, CfInfo.USER_KEY]
+        if include_password:
+            login_params.append(CfInfo.PASSWORD_KEY)
+        return login_params
+
+    @staticmethod
+    def get_org_space_keys():
+        """ Get organization and space keys
+
+        Returns:
+            list: Organization and space keys for target dictionary
+        """
+        return [CfInfo.ORG_KEY, CfInfo.SPACE_KEY]
+
+    def get_target_dict(self, include_password=False):
+        """ Get complete target dictionary
+        Args:
+            include_password (bool) Should be password included in target dict
+
+        Returns:
+            dict: Target dictionary associated with this CfInfo instance
+        """
+        cf_target = {
+            self.CF_API_KEY: self.api_url,
+            self.USER_KEY: self.user,
+            self.ORG_KEY: self.org,
+            self.SPACE_KEY: self.space
+        }
+        if include_password:
+            cf_target[CfInfo.PASSWORD_KEY] = self.password
+        return cf_target
 
 
 def login(cf_info):
@@ -450,36 +523,20 @@ def target(org, space):
     run_command([CF, 'target', '-o', org, '-s', space])
 
 
-def get_target():
+def get_current_cli_target():
     """Get target information (api endpoint, user, org, space).
 
     Raises:
         CommandFailedError: When the command fails (returns non-zero code).
 
     Returns:
-        CfInfo: Object filled with parsed data from "cf target" command.
+        dict: Dictionary filled with parsed data from "cf target" command.
     """
-    api_endpoint_key = "API endpoint"
     try:
         output = get_command_output([CF, 'target'])
-        target_map = {}
-        for line in output.splitlines():
-            line = line.strip()
-            if line != "":
-                split_line = line.partition(':')
-                if split_line[1] != "":
-                    key = split_line[0].strip()
-                    value = split_line[2].strip()
-                    target_map[key] = value
-
-        # clean up endpoint address from API version info
-        target_map[api_endpoint_key] = target_map[api_endpoint_key].partition(" ")[0]
-
-        return CfInfo(target_map[api_endpoint_key], "", target_map["User"],
-                      target_map["Org"], target_map["Space"])
-    except Exception: # pylint: disable=broad-except
-        # In case of any error, simply initialize with empty strings (no target data)
-        return CfInfo("", "", "", "", "")
+        return _parse_target_cli_output(output)
+    except (StandardError, CommandFailedError):
+        return CfInfo.get_empty().get_target_dict()
 
 
 def get_command_output(command):
@@ -522,3 +579,12 @@ def run_command(command, work_dir='.', redirect_output=True):
         proc = Popen(command, cwd=work_dir)
         if proc.wait() != 0:
             raise CommandFailedError('Failed command: {}'.format(' '.join(command)))
+
+
+def _parse_target_cli_output(cli_output):
+    target_dict = {}
+    nonempty_lines = [line for line in cli_output.splitlines() if line]
+    for line in nonempty_lines:
+        key, sep, value = line.partition(':')  # pylint: disable=unused-variable
+        target_dict[key] = value.strip().partition(" ")[0]
+    return target_dict
