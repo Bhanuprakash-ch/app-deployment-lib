@@ -582,9 +582,10 @@ def run_command(command, work_dir='.', redirect_output=True):
 
 
 def _parse_target_cli_output(cli_output):
-    target_dict = {}
+    target_dict = CfInfo.get_empty().get_target_dict()
     nonempty_lines = [line for line in cli_output.splitlines() if line]
     for line in nonempty_lines:
         key, sep, value = line.partition(':')  # pylint: disable=unused-variable
-        target_dict[key] = value.strip().partition(" ")[0]
+        if key in target_dict:
+            target_dict[key] = value.strip().partition(" ")[0]
     return target_dict

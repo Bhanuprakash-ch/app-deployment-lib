@@ -86,6 +86,11 @@ def get_parser(app_name):
                         help='Application name.', default=app_name)
     parser.add_argument('--project_dir', type=str,
                         help='Directory containing application manifest.')
+    parser.add_argument('--no_interact', action='store_true',
+                        help='When enabled there will be no interaction with '
+                             'user. Target and login data must be provided by '
+                             'script parameters or you must be currently '
+                             'logged in to CF with CF CLI.')
     return parser
 
 
@@ -112,11 +117,13 @@ def get_info(args):
 
     """
 
+    no_interact = args.no_interact
     current_target = cf_cli.get_current_cli_target()
     arg_info = cf_cli.CfInfo(args.api_url, args.password, args.user, args.org,
                              args.space)
     arg_provided_target = arg_info.get_target_dict(include_password=True)
-    new_target = _extract_new_target(current_target, arg_provided_target)
+    new_target = _extract_new_target(current_target, arg_provided_target,
+                                     no_interact)
     login_required = _is_login_required(new_target, current_target)
     target_required = _is_target_required(login_required,
                                           new_target, current_target)
@@ -173,18 +180,27 @@ def _get_base_url(api_url):
     return base_url
 
 
-def _extract_new_target(current_target, arg_provided_target):
+def _extract_new_target(current_target, arg_provided_target, no_interact=False):
     new_target = cf_cli.CfInfo.get_empty().get_target_dict()
 
     for target_param in new_target:
         current = current_target[target_param]
         arg_provided = arg_provided_target[target_param]
         new_target[target_param] = arg_provided if arg_provided else \
-            _raw_input_default(target_param, current)
+            _get_target_param_value(target_param, current, no_interact)
 
-    if not arg_provided_target[cf_cli.CfInfo.PASSWORD_KEY]:
-        new_target[cf_cli.CfInfo.PASSWORD_KEY] = getpass.unix_getpass()
+    provided_pass = arg_provided_target[cf_cli.CfInfo.PASSWORD_KEY]
+    new_target[cf_cli.CfInfo.PASSWORD_KEY] = provided_pass if provided_pass \
+        else _get_password_value(no_interact)
     return new_target
+
+
+def _get_target_param_value(target_param, current, no_interact):
+    return current if no_interact else _raw_input_default(target_param, current)
+
+
+def _get_password_value(no_interact):
+    return '' if no_interact else getpass.unix_getpass()
 
 
 def _raw_input_default(message, default_value):
