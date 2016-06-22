@@ -54,8 +54,12 @@ def upload_to_hdfs(api_url, org_name, local_file_path, title, category='other'):
                              headers={'Authorization': cf_cli.oauth_token()},
                              data=data)
     response_json = json.loads(response.text)
-    return response_json["objectStoreId"] + "/" + response_json[
-        "idInObjectStore"]
+
+    if response.status_code == 201:
+        return response_json["objectStoreId"] + "/" \
+               + response_json["idInObjectStore"]
+    else:
+        raise Exception(response_json["message"])
 
 
 def get_parser(app_name):
