@@ -255,6 +255,32 @@ def create_service_broker(name, user, password, url):
     run_command([CF, 'create-service-broker', name, user, password, url])
 
 
+def create_service_key(instance_name, key_name):
+    """Creates a service key.
+
+    Args:
+        instance_name (str): name of the instance to create the key for
+        key_name (str): name of the key to be created
+
+    Raises:
+        CommandFailedError: When "cf create-service-key" fails (returns non-zero code).
+    """
+    run_command([CF, 'create-service-key', instance_name, key_name])
+
+
+def delete_service_key(instance_name, key_name):
+    """Deletes a service key.
+
+    Args:
+        instance_name (str): name of the instance to delete the key from
+        key_name (str): name of the key to be deleted
+
+    Raises:
+        CommandFailedError: When "cf delete-service-key" fails (returns non-zero code).
+    """
+    run_command([CF, 'delete-service-key', instance_name, key_name, '-f'])
+
+
 def create_space(space_name, org_name):
     """Creates a new space within an organization. Will do nothing if it's already created.
 

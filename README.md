@@ -4,6 +4,7 @@ This Python package contains a set of helper functions which can be used to auto
 ## Features
 * Wrapper for Cloud Foundry Command Line Interface: login and target CF API, create service instances, create user provided service instances, push/restage/restart applications, bind applications with services, create service brokers, create organizations and spaces, run custom CF CLI commands and more!
 * Upload files to HDFS
+* Deploy app to Gearpump
 * Create artifact packages of applications using Maven
 
 ## Prerequisites
