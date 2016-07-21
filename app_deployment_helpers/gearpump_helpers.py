@@ -27,6 +27,7 @@ from app_deployment_helpers import cf_api
 GEARPUMP_COOKIE_NAME = 'gpcookie'
 REQUEST_BODY_FILE = 'request_body'
 
+
 def prepare_deploy_req_data(service_instances, users_args):
     """
     Prepares data for <gearpump_instance>/api/v1.0/master/submitapp REST
@@ -54,9 +55,11 @@ def prepare_deploy_req_data(service_instances, users_args):
     json_data = _encode_json_to_utf8(_add_user_args_section(json_data, users_args))
     return json_data
 
+
 def _add_user_args_section(body_data_json, users_args):
     body_data_json['usersArgs'] = users_args
     return body_data_json
+
 
 def get_service_instance_data(instance_name):
     """
@@ -86,6 +89,7 @@ def get_jar_file_name():
         if dir_file.endswith("-with-dependencies.jar"):
             return dir_file
 
+
 def gearpump_login(gearpump_url, username, password):
     """
     Logs-in to Gearpump using its REST API and saves login cookie to allow
@@ -105,6 +109,7 @@ def gearpump_login(gearpump_url, username, password):
     save_to_file(response.cookies, GEARPUMP_COOKIE_NAME)
     return response.text
 
+
 def save_to_file(data, filename):
     """
     Serializes data
@@ -116,6 +121,7 @@ def save_to_file(data, filename):
     with open(filename, 'wb') as tmp_file:
         pickle.dump(data, tmp_file)
 
+
 def load_file(filename):
     """
     Loads file from disk
@@ -126,6 +132,7 @@ def load_file(filename):
     with open(filename, 'rb') as tmp_file:
         return pickle.load(tmp_file)
 
+
 def delete_file(filename):
     """
     Deletes file from disk
@@ -134,6 +141,7 @@ def delete_file(filename):
         filename (str): name of the file to be deleted
     """
     os.remove(filename)
+
 
 def deploy_to_gearpump(gearpump_url, local_file_path, users_args, bound_instances):
     """
@@ -162,6 +170,6 @@ def deploy_to_gearpump(gearpump_url, local_file_path, users_args, bound_instance
     delete_file(REQUEST_BODY_FILE)
     return response.text
 
+
 def _encode_json_to_utf8(json_input):
     return yaml.safe_load(json.dumps(json_input))
-

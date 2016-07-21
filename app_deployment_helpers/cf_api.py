@@ -24,6 +24,7 @@ from app_deployment_helpers import cf_cli
 
 CF_CURL = [cf_cli.CF, 'curl']
 
+
 def create_service_key(service_guid, key_name):
     """Creates a service key for particular service instance.
 
@@ -50,8 +51,7 @@ def delete_particular_service_key(key_guid):
         key_guid (str): GUID of a service key
     """
     command_suffix = ['/v2/service_keys/{}'.format(key_guid), '-X', 'DELETE', '-d', '']
-    cmd_output = cf_cli.get_command_output(CF_CURL + command_suffix)
-    print cmd_output
+    cf_cli.get_command_output(CF_CURL + command_suffix)
 
 
 def get_temporary_key_data(instance_name, key_name='DummyKey123'):

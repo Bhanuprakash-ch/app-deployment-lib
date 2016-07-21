@@ -227,4 +227,3 @@ def _is_target_required(login_required, new_target, current_target):
         if new_target[key] != current_target[key]:
             return True
     return False
-
