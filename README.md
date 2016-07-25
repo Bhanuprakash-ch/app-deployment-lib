@@ -1,4 +1,4 @@
-# python-app-deployment-helpers
+# app-deployment-lib
 This Python package contains a set of helper functions which can be used to automate deployment of custom applications in Cloud Foundry.
 
 ## Features
@@ -15,13 +15,13 @@ This Python package contains a set of helper functions which can be used to auto
 ## Installation
 To import the package in your script it is recommended to use [tox](https://pypi.python.org/pypi/tox). Check out [basic tox example](https://testrun.org/tox/latest/#basic-example) or "Example projects" section to learn more!
 
-To use a specific version of `python-app-deployment-helpers` identified by `commit_ID` add the following line to `requirements.txt` file in your project (replace `<commit_ID>` with a commit ID that points to a version you want to use):
+To use a specific version of `app-deployment-lib` identified by `commit_ID` add the following line to `requirements.txt` file in your project (replace `<commit_ID>` with a commit ID that points to a version you want to use):
 ```
--e git+git@github.com:trustedanalytics/python-app-deployment-helpers.git@<commit_ID>#egg=app_deployment_helpers
+-e git+git@github.com:trustedanalytics/app-deployment-lib.git@<commit_ID>#egg=app_deployment_lib
 ```
 If you want to use latest version from master branch add the following line:
 ```
--e git+git@github.com:trustedanalytics/python-app-deployment-helpers.git@master#egg=app_deployment_helpers
+-e git+git@github.com:trustedanalytics/app-deployment-lib.git@master#egg=app_deployment_lib
 ```
 For more details on using PIP and requirements files, check out [the documentation](https://pip.readthedocs.io/en/1.1/requirements.html).
 
@@ -29,8 +29,8 @@ For more details on using PIP and requirements files, check out [the documentati
 ## Example usage
 
 ```python
-from app_deployment_helpers import cf_cli
-from app_deployment_helpers import cf_helpers
+from app_deployment_lib import cf_cli
+from app_deployment_lib import cf_helpers
 
 PROJECT_DIR = cf_helpers.get_project_dir()
 
