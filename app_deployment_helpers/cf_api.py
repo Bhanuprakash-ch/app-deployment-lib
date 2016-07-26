@@ -76,14 +76,13 @@ def get_service_instance_guid(instance_name):
     Returns:
         str: Guid of a particular service instance.
     """
-    instances = get_all_service_instances()
-    resources = instances['resources']
-    for resource in resources:
-        if resource['entity']['name'] == instance_name:
-            return resource['metadata']['guid']
-
-    raise cf_cli.CommandFailedError(
-        'Failed to get service {} guid.'.format(instance_name))
+    instance = get_service_instance(instance_name)
+    try:
+        guid = instance['metadata']['guid']
+        return guid
+    except:
+        raise cf_cli.CommandFailedError(
+            'Failed to get service {} guid.'.format(instance_name))
 
 
 def get_service_instance(instance_name):
@@ -93,7 +92,10 @@ def get_service_instance(instance_name):
     Returns:
         dict: Details of particular service instance.
     """
-    return cf_curl_get('/v2/service_instances/{}'.format(get_service_instance_guid(instance_name)))
+    cmd_output = cf_curl_get('/v2/service_instances?q=name:{}'.format(instance_name))
+    if cmd_output['total_results'] == 0:
+        raise Exception("No service instance with name: {} found".format(instance_name))
+    return cmd_output['resources'][0]
 
 
 def get_all_service_instances():

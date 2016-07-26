@@ -575,10 +575,8 @@ def get_command_output(command):
         CommandFailedError: When the command fails (returns non-zero code).
     """
     proc = Popen(command, stdout=PIPE)
-    return_code = proc.wait()
-    output = proc.stdout.read()
-
-    if return_code == 0:
+    output = proc.communicate()[0]
+    if proc.returncode == 0:
         return output
     else:
         raise CommandFailedError('Failed command: {}\nOutput: {}'.format(' '.join(command), output))
@@ -598,9 +596,10 @@ def run_command(command, work_dir='.', redirect_output=True):
     """
     if redirect_output:
         proc = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=work_dir)
-        if proc.wait() != 0:
+        output = proc.communicate()[0]
+        if proc.returncode != 0:
             raise CommandFailedError('Failed command: {}\nOutput: {}'
-                                     .format(' '.join(command), proc.stdout.read()))
+                                     .format(' '.join(command), output))
     else:
         proc = Popen(command, cwd=work_dir)
         if proc.wait() != 0:
