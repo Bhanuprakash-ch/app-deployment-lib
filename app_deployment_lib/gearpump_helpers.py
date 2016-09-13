@@ -22,7 +22,7 @@ import pickle
 import json
 import requests
 import yaml
-from app_deployment_helpers import cf_api
+from app_deployment_lib import cf_api
 
 GEARPUMP_COOKIE_NAME = 'gpcookie'
 REQUEST_BODY_FILE = 'request_body'

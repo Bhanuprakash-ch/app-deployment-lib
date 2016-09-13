@@ -41,6 +41,6 @@ cf_helpers.push(work_dir=PROJECT_DIR, options='my-application-name')
 ```
 
 ## Example projects
-The following projects support automated deployment which is implemented with usage of python-app-deployment-helpers!
+The following projects support automated deployment which is implemented with usage of app-deployment-lib!
 * [Space Shuttle Demo](https://github.com/trustedanalytics/space-shuttle-demo)
 * [Dataset Reader Sample](https://github.com/trustedanalytics/dataset-reader-sample)

@@ -20,7 +20,7 @@ Cloud Foundry REST API client wrapping "cf curl" command.
 
 import json
 
-from app_deployment_helpers import cf_cli
+from app_deployment_lib import cf_cli
 
 CF_CURL = [cf_cli.CF, 'curl']
 

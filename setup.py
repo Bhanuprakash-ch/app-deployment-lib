@@ -22,7 +22,7 @@ with open(os.path.join(setup_dir, 'requirements.txt')) as req_file:
     requirements = [lib.split('==')[0] for lib in req_file.readlines()]
 
 setup(
-    name='app_deployment_helpers',
+    name='app_deployment_lib',
     version='0.0.14',
     packages=find_packages(),
     install_requires=requirements,

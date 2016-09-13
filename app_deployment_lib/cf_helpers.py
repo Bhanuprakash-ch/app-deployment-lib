@@ -26,7 +26,7 @@ import sys
 
 import requests
 
-from app_deployment_helpers import cf_cli
+from app_deployment_lib import cf_cli
 
 
 def upload_to_hdfs(api_url, org_name, local_file_path, title, category='other'):
