@@ -23,7 +23,7 @@ with open(os.path.join(setup_dir, 'requirements.txt')) as req_file:
 
 setup(
     name='app_deployment_lib',
-    version='0.0.14',
+    version='0.0.15',
     packages=find_packages(),
     install_requires=requirements,
     license='Apache 2.0'
